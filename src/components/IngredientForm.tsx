@@ -1,13 +1,13 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useFormStatus } from 'react-dom';
 import { getRecipesAction } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { useEffect, useState, useRef } from 'react';
+import { useActionState, useEffect, useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import type { SuggestRecipesOutput } from '@/ai/flows/suggest-recipes';
 import { ChefHat, Camera, X } from 'lucide-react';
@@ -29,7 +29,7 @@ function SubmitButton() {
 
 export function IngredientForm({ setRecipes, setLoading }: IngredientFormProps) {
   const initialState = { recipes: null, error: null };
-  const [state, formAction] = useFormState(getRecipesAction, initialState);
+  const [state, formAction] = useActionState(getRecipesAction, initialState);
   const { toast } = useToast();
   const { pending } = useFormStatus();
   const [photoDataUri, setPhotoDataUri] = useState<string | null>(null);
