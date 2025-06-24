@@ -1,6 +1,19 @@
 export type Recipe = {
   name: string;
-  ingredients: string;
-  instructions: string;
-  nutritionalInformation?: string;
+  description: string;
+  prepTime: string;
+  cookTime: string;
+  servings: string;
+  ingredients: {
+    name: string;
+    quantity: string;
+    unit: string;
+  }[];
+  instructions: string[];
+  nutritionalInformation?: {
+    calories?: string;
+    protein?: string;
+    carbs?: string;
+    fat?: string;
+  };
 };
