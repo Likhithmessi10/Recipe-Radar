@@ -13,15 +13,26 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-const SuggestRecipesInputSchema = z.object({
-  ingredients: z
-    .string()
-    .describe('A comma-separated list of ingredients the user has on hand.'),
-  dietaryRestrictions: z
-    .string()
-    .optional()
-    .describe('Any dietary restrictions or preferences the user has.'),
-});
+const SuggestRecipesInputSchema = z
+  .object({
+    ingredients: z
+      .string()
+      .optional()
+      .describe('A comma-separated list of ingredients the user has on hand.'),
+    photoDataUri: z
+      .string()
+      .optional()
+      .describe(
+        "A photo of ingredients, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'"
+      ),
+    dietaryRestrictions: z
+      .string()
+      .optional()
+      .describe('Any dietary restrictions or preferences the user has.'),
+  })
+  .refine(data => data.ingredients || data.photoDataUri, {
+    message: 'Please provide either a list of ingredients or an image.',
+  });
 export type SuggestRecipesInput = z.infer<typeof SuggestRecipesInputSchema>;
 
 const SuggestRecipesOutputSchema = z.object({
@@ -47,12 +58,19 @@ const prompt = ai.definePrompt({
   name: 'suggestRecipesPrompt',
   input: {schema: SuggestRecipesInputSchema},
   output: {schema: SuggestRecipesOutputSchema},
-  prompt: `You are a recipe suggestion AI. Given a list of ingredients and dietary restrictions, suggest recipes that the user can make.
+  prompt: `You are a recipe suggestion AI. Given a list of ingredients, a photo of ingredients, or both, and optional dietary restrictions, suggest recipes that the user can make.
 
-Ingredients: {{{ingredients}}}
+{{#if ingredients}}
+Ingredients list provided: {{{ingredients}}}
+{{/if}}
+{{#if photoDataUri}}
+Photo of ingredients provided: {{media url=photoDataUri}}
+Identify the ingredients in the photo.
+{{/if}}
+
 Dietary Restrictions: {{{dietaryRestrictions}}}
 
-Suggest recipes that utilize as many of the given ingredients as possible, and adhere to the specified dietary restrictions.
+Suggest recipes that utilize the ingredients from the list and/or the photo, and adhere to the specified dietary restrictions. If both an image and text are provided, use ingredients from both sources.
 
 Format the output as a JSON array of recipes, including the recipe name, ingredients, instructions, and nutritional information (if available).`,
 });

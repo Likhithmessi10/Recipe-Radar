@@ -3,10 +3,16 @@
 import { suggestRecipes, SuggestRecipesInput, SuggestRecipesOutput } from '@/ai/flows/suggest-recipes';
 import { z } from 'zod';
 
-const actionSchema = z.object({
-  ingredients: z.string().min(3, { message: 'Please list at least one ingredient.' }),
-  dietaryRestrictions: z.string().optional(),
-});
+const actionSchema = z
+  .object({
+    ingredients: z.string().optional(),
+    photoDataUri: z.string().optional(),
+    dietaryRestrictions: z.string().optional(),
+  })
+  .refine(data => data.ingredients || data.photoDataUri, {
+    message: 'Please list at least one ingredient or upload an image.',
+    path: ['ingredients'],
+  });
 
 export async function getRecipesAction(
   prevState: any,
@@ -14,13 +20,16 @@ export async function getRecipesAction(
 ): Promise<{ recipes: SuggestRecipesOutput['recipes'] | null; error: string | null }> {
   const validatedFields = actionSchema.safeParse({
     ingredients: formData.get('ingredients'),
+    photoDataUri: formData.get('photoDataUri'),
     dietaryRestrictions: formData.get('dietaryRestrictions'),
   });
 
   if (!validatedFields.success) {
+    const fieldErrors = validatedFields.error.flatten().fieldErrors;
+    const formErrors = validatedFields.error.flatten().formErrors;
     return {
       recipes: null,
-      error: validatedFields.error.flatten().fieldErrors.ingredients?.[0] || 'Invalid input.',
+      error: fieldErrors.ingredients?.[0] || formErrors[0] || 'Invalid input.',
     };
   }
 
